@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import mongoose from 'mongoose';
+import { Server } from 'socket.io';
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,9 @@ var con = mysql.createConnection({
 });
 
 const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'] },
+});
 
 con.connect(function (err) {
     if (err) throw err;
@@ -32,6 +36,12 @@ con.connect(function (err) {
 con.ping((err) => {
     if (err) console.error("MySQL connection lost:", err);
     else console.log("MySQL is active");
+});
+
+io.on('connection', (socket) => {
+    console.log('A User connected');
+    
+    socket.on('disconnect', () => console.log('User disconnected'));
 });
 
 app.use((req, res, next) => {
