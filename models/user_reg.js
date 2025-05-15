@@ -1,20 +1,6 @@
 import { Schema, model } from "mongoose";
-import { isEmail } from "validator";
-import bcrypt from "bcrypt";
-
-const SessionMessageRequestSchema = z.object({
-    name: z.string().min(3, "Name is required"),
-    email: z.string().email("Enter a valid Email"),
-    password: z.string().min(8, "Password must be at least 8 characters long"),
-});
-
-//  // Verify session belongs to employee
-//  const sessionData = await db.query.wellbeing_sessions.findFirst({
-//     where: and(
-//         eq(wellbeing_sessions.id, sessionId),
-//         eq(wellbeing_sessions.employee_id, employeeId)
-//     ),
-// });
+import pkg from 'validator';
+const { isEmail } = pkg;
 
 const UserSchema = Schema({
     email : {
@@ -22,19 +8,19 @@ const UserSchema = Schema({
         required: true,
         unique: true,
         lowercase: true,
-        validate: [isEmail, "Please enter a valid email"] //use zod 
+        validate: [isEmail, "Please enter a valid email!"]
     },
-    token : {
+    name: {
         type: String,
         required: true,
-        unique: true,
+        minlength: 3,
     },
-    createdAt: {
-        type: String, 
+    password: {
+        type: String,
         required: true,
-        unique: false
+        minlength: 8,
     }
 })
-const User = model('user', UserSchema)
+const User = model('user', UserSchema, 'What-s-up-Users')
 
 export default User;

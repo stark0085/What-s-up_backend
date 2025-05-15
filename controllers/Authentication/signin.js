@@ -1,45 +1,39 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import User from "../../models/user_reg.js";
 
-export async function signin(req, res) {
+export default async function signin(req, res) {
     try {
-        const body = await req.json();
-        const { email, password } = body;
+        const { email, name, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ code: 1, message: 'Email and password are required' });
+        if (!email || !password ||!name) {
+            return res.status(400).json({ code: 1, message: 'Name, email and password are required' });
         }
 
-        // const { data, error } = await supabase
-        //     .from('employee')
-        //     .select('e_password')
-        //     .eq('email', email)
-        //     .single();
-
-        if (error || !data) {
+        const user = await User.findOne({ email });;
+        if (!user) {
             return res.status(400).json({ code: 1, message: 'Invalid email or password' });
         }
 
-        const isCorrectPassword = await bcrypt.compare(password, data.e_password);
+        const isCorrectPassword = await bcrypt.compare(password, user.password);
 
         if (!isCorrectPassword) {
             return res.status(400).json({ code: 1, message: 'Invalid password' });
         }
 
         if (!process.env.JWT_SECRET) {
-            throw new Error('JWT_SECRET is missing in environment variables');
+            return res.status(400).json({ message: "Missing JWT Secret" });
         }
-
+                
         const token = jwt.sign(
-            { email },
+            { email, name },
             process.env.JWT_SECRET,
-            { expiresIn: "10h" }
+            { expiresIn: process.env.TIME_TO_LIVE || "24h"}
         );
 
         return res.status(200).json({ code: 0, message: 'Signed in successfully', token: token });
 
     } catch (error) {
-        console.error('Sign-in error:', error);
-        return res.status(400).json({ code: 1, message: error.message });
+        return res.status(500).json({ code: 1, message: "Request Timed Out", error: error });
     }
 }
